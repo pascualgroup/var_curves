@@ -106,29 +106,31 @@ build_calendar <- function(num_years = 100, burnin=27000, year_to_start=10, plot
   # Set the dates corresponding to the empirical survey dates. year_to_start is
   # the year in the simulation (post-burnin) where simulated data is starting to
   # be matched to the empirical data.
-  calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start & calendar$month_sim=='Oct'] <- 'S1'
-  calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start+1 & calendar$month_sim=='Jun'] <- 'S2'
-  calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start+2 & calendar$month_sim=='Jun'] <- 'S3'
-  calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start+2 & calendar$month_sim=='Oct'] <- 'S4'
-  calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start+3 & calendar$month_sim=='Oct'] <- 'S5'
-  calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start+4 & calendar$month_sim=='Jun'] <- 'S6'
-  irs_1_start <- extract_from_calendar(calendar, burnin, year_to_start+1, 'Oct',d=15)$running_day
-  irs_1_end <- extract_from_calendar(calendar, burnin, year_to_start+1, 'Dec',d=30)$running_day
-  calendar$empirical_IRS[calendar$running_day%in%irs_1_start:irs_1_end] <- 'IRS'
-  irs_2_start <- extract_from_calendar(calendar, burnin, year_to_start+2, 'May',d=15)$running_day
-  irs_2_end <- extract_from_calendar(calendar, burnin, year_to_start+2, 'Jul',d=30)$running_day
-  calendar$empirical_IRS[calendar$running_day%in%irs_2_start:irs_2_end] <- 'IRS'
-  irs_3_start <- extract_from_calendar(calendar, burnin, year_to_start+2, 'Dec',d=15)$running_day
-  irs_3_end <- extract_from_calendar(calendar, burnin, year_to_start+3, 'Feb',d=30)$running_day
-  calendar$empirical_IRS[calendar$running_day%in%irs_3_start:irs_3_end] <- 'IRS'
+  if (year_to_start < num_years){
+    calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start & calendar$month_sim=='Oct'] <- 'S1'
+    calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start+1 & calendar$month_sim=='Jun'] <- 'S2'
+    calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start+2 & calendar$month_sim=='Jun'] <- 'S3'
+    calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start+2 & calendar$month_sim=='Oct'] <- 'S4'
+    calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start+3 & calendar$month_sim=='Oct'] <- 'S5'
+    calendar$empirical_survey[calendar$year_sim==burnin/360+year_to_start+4 & calendar$month_sim=='Jun'] <- 'S6'
+    irs_1_start <- extract_from_calendar(calendar, burnin, year_to_start+1, 'Oct',d=15)$running_day
+    irs_1_end <- extract_from_calendar(calendar, burnin, year_to_start+1, 'Dec',d=30)$running_day
+    calendar$empirical_IRS[calendar$running_day%in%irs_1_start:irs_1_end] <- 'IRS'
+    irs_2_start <- extract_from_calendar(calendar, burnin, year_to_start+2, 'May',d=15)$running_day
+    irs_2_end <- extract_from_calendar(calendar, burnin, year_to_start+2, 'Jul',d=30)$running_day
+    calendar$empirical_IRS[calendar$running_day%in%irs_2_start:irs_2_end] <- 'IRS'
+    irs_3_start <- extract_from_calendar(calendar, burnin, year_to_start+2, 'Dec',d=15)$running_day
+    irs_3_end <- extract_from_calendar(calendar, burnin, year_to_start+3, 'Feb',d=30)$running_day
+    calendar$empirical_IRS[calendar$running_day%in%irs_3_start:irs_3_end] <- 'IRS'
   
-  if (plotit){
-    temp <- calendar %>% filter(!is.na(empirical_survey) | !is.na(empirical_IRS))
-    p <- ggplot(temp, aes(running_day))
-    p <- p+geom_point(aes(y=empirical_survey),color='blue')
-    p <- p+geom_point(aes(y=empirical_IRS),color='red')
-    p <- p+geom_vline(xintercept = c(irs_2_start,irs_2_end))
-    print(p)
+    if (plotit){
+      temp <- calendar %>% filter(!is.na(empirical_survey) | !is.na(empirical_IRS))
+      p <- ggplot(temp, aes(running_day))
+      p <- p+geom_point(aes(y=empirical_survey),color='blue')
+      p <- p+geom_point(aes(y=empirical_IRS),color='red')
+      p <- p+geom_vline(xintercept = c(irs_2_start,irs_2_end))
+      print(p)
+    }
   }
   
   return(calendar)
@@ -217,8 +219,14 @@ buildInfomapIntervention <- function(phase){
 }
 
 
-calculateFeatures <- function(g){
-require(igraph)  
+calculateFeatures <- function(x){
+  require(igraph) 
+
+  giant.component <- function(g) { 
+    cl <- clusters(g) 
+    induced.subgraph(g, which(cl$membership == which.max(cl$csize)))
+  }
+
   f_01_averageLocalClusteringCoeff <- function(g,GC=F){
     if (GC) {
       gc <- giant.component(g)
@@ -287,12 +295,7 @@ require(igraph)
     cl$no/length(V(g))
   }
   
-  giant.component <- function(g) { 
-    cl <- clusters(g) 
-    induced.subgraph(g, which(cl$membership == which.max(cl$csize)))
-  }
-  
-  f_13_averageComponentSize <- function(g) { 
+ f_13_averageComponentSize <- function(g) { 
     cl <- clusters(g) 
     mean(cl$csize)
   }
@@ -339,21 +342,24 @@ require(igraph)
     mean(igraph::closeness(g, weights = NULL))
   }
   
-  graphDensityDirected <- function(m){ # density of directed graphs
-    E = sum(m!=0)-length(diag(m)) # in our networks the diagonal is 1 so this should be considered.
-    N=nrow(m)
-    return(E/(N*(N-1)))
-  }
-  
+
   motifsProportion <- function(g){ # Calculate the proportion of each of the 16 motifs out of the total motifs found
     motifs <- graph.motifs(g, size = 3)
     motifs.prop <- motifs/sum(motifs, na.rm = T)
     #names(motifs.prop) <- paste('motif',1:16,sep='')
     return(motifs.prop[-c(1,2,4,12)]) # Motifs 1,2,4 are constantly (across all cutoffs) NA and 12 is constantly 0 (I tested it)
   }
-  if (!is.igraph(g)){
-    g <- graph.adjacency(g, mode = 'directed', weighted = T, diag = F)
+  
+  
+  
+  # Main function starts here
+  
+  ## Transfomr to an igraph object
+  if (!is.igraph(x)){
+    g <- graph.adjacency(x, mode = 'directed', weighted = T, diag = F)
   }
+  
+  ## Calculate properties
   featureVector <- vector(length=32)
   # Diagnostics of transitivity
   featureVector[1] <- f_01_averageLocalClusteringCoeff(g,F)    # Clustering coefficient averaged across all nodes
