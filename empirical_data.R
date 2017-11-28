@@ -125,8 +125,8 @@ dev.off()
 
 
 # ABM: Get data from SQL -------------------------------------------------------
-iteration=1
-args=c(paste('mtn_12_seasonality_empirical_irs_2_run_',iteration,sep=''),27000,30,0.9,1)
+iteration=2
+args=c(paste('mtn_12_seasonality_empirical_run_',iteration,sep=''),27000,30,0.9,1)
 experiment <- as.character(args[1])
 burnin <- as.numeric(args[2])
 windowWidth <- as.numeric(args[3]) # 30 is for a month
@@ -135,7 +135,7 @@ MOI <- as.numeric(args[5])
 
 setwd('~/Documents/sqlite/')
 # maxTime <- firstSample+windowWidth*nSamples*(aggregateResolution+samplingSpace)
-maxTime <- 36000
+maxTime <- 63000
 db <- dbConnect(SQLite(), dbname = paste(experiment,'.sqlite',sep=''))
 strainComposition <- dbGetQuery(db, 'SELECT strainId, geneId FROM strains')
 loci <- dbGetQuery(db, 'SELECT alleleId, geneId FROM loci')
@@ -149,7 +149,7 @@ temporalData$timeSlice <- ceiling((temporalData$time-burnin)/windowWidth) # subt
 range(temporalData$time)
 
 # Set months
-calendar <- build_calendar(num_years = 100, burnin = 27000, year_to_start = 100)
+calendar <- build_calendar(num_years = 175, burnin = 27000, year_to_start = 10000)
 calendar$empirical_survey[calendar$month_sim=='Oct'] <- 'S1'
 calendar$empirical_survey[calendar$month_sim=='Jun'] <- 'S2'
 
@@ -209,21 +209,57 @@ for (ts in timeSlices_S2){
   layersFull_S2[[which(timeSlices_S2==ts)]] <- similarityMatrix
 }
 
+### Write layers to file
+setwd('/home/shai/Documents/Shazia/ABM_layers')
+pb <- txtProgressBar(min=1, max=length(timeSlices_S1), style=3)
+for (l in timeSlices_S1){
+  setTxtProgressBar(pb, which(timeSlices_S1==l))
+  file <- paste('S1_',experiment,'_layer_',l,'.csv',sep='')
+  write.table(layersFull_S1[[which(timeSlices_S1==l)]], file, row.names = T, col.names = T, sep=',')
+}
+pb <- txtProgressBar(min=1, max=length(timeSlices_S2), style=3)
+for (l in timeSlices_S2){
+  setTxtProgressBar(pb, which(timeSlices_S2==l))
+  file <- paste('S2_',experiment,'_layer_',l,'.csv',sep='')
+  write.table(layersFull_S2[[which(timeSlices_S2==l)]], file, row.names = T, col.names = T, sep=',')
+}
+
+
+
+# Read layers from files --------------------------------------------------
+files <- list.files(pattern = 'S1')
+layers_S1 <- c()
+for (f in files){
+  x <- data.matrix(read.csv(f))
+  colnames(x) <- rownames(x)
+  layers_S1[[which(files==f)]] <- x
+}
+files <- list.files(pattern = 'S2')
+layers_S2 <- c()
+for (f in files){
+  x <- data.matrix(read.csv(f))
+  colnames(x) <- rownames(x)
+  layers_S2[[which(files==f)]] <- x
+}
+
+
+
 ### Sub-sample networks to obtain the same number of nodes as in empirical networks
-layersFull_S1_sampled <- c()
-for (i in 1:length(layersFull_S1)){
-  x <- layersFull_S1[[i]]
-  sm <- sample(nrow(x),nrow(layersEmpirical[[1]]),F)
-  layersFull_S1_sampled[[i]] <- x[sm,sm]
+N <- min(nrow(layersEmpirical[[1]]),nrow(layersEmpirical[[2]]))
+layers_S1_sampled <- c()
+for (i in 1:length(layers_S1)){
+  x <- layers_S1[[i]]
+  sm <- sample(nrow(x),N,F)
+  layers_S1_sampled[[i]] <- x[sm,sm]
 }  
-sapply(layersFull_S1_sampled, dim)
-layersFull_S2_sampled <- c()
-for (i in 1:length(layersFull_S2)){
-  x <- layersFull_S2[[i]]
-  sm <- sample(nrow(x),nrow(layersEmpirical[[2]]),F)
-  layersFull_S2_sampled[[i]] <- x[sm,sm]
+sapply(layers_S1_sampled, dim)
+layers_S2_sampled <- c()
+for (i in 1:length(layers_S2)){
+  x <- layers_S2[[i]]
+  sm <- sample(nrow(x),N,F)
+  layers_S2_sampled[[i]] <- x[sm,sm]
 }  
-sapply(layersFull_S2_sampled, dim)
+sapply(layers_S2_sampled, dim)
 
 # ABM: Apply cutoff -------------------------------------------------------
 x <- xtabs(~strainId+alleleId, strainComposition_reduced_S1)  
@@ -273,26 +309,35 @@ plot(hc_ABM)
 # Compare ABM to EMPIRICAL ------------------------------------------------
 library(adegenet)
 
-S1_networks <- layersFull_S1_sampled
-S2_networks <- layersFull_S2_sampled
+S1_networks <- layers_S1_sampled
+S2_networks <- layers_S2_sampled
 s_empirical <- layersEmpirical
 
-network_features_to_include <- 1:32
-
+### Calculate network metrics
 features_ABM_S1 <- sapply(S1_networks, calculateFeatures)
-colnames(features_ABM_S1) <- paste('S1',timeSlices_S1,sep='_')
+colnames(features_ABM_S1) <- paste('S1',1:length(S1_networks),sep='_')
 features_ABM_S2 <- sapply(S2_networks, calculateFeatures)
-colnames(features_ABM_S2) <- paste('S2',timeSlices_S2,sep='_')
+colnames(features_ABM_S2) <- paste('S2',1:length(S2_networks),sep='_')
+
+
+### Cluster networks
+network_features_to_include <- c(2,9,10,16,17,19,20)
+network_features_to_include <- c(19,20)
+network_features_to_include <- c(12,13)
+network_features_to_include <- 20
+network_features_to_include <- 1:32
 x <- t(cbind(features_ABM_S1[network_features_to_include,],features_ABM_S2[network_features_to_include,]))
-groups_ABM <- c(rep('S1',25),rep('S2',25))
+groups_ABM <- c(rep('S1',length(S1_networks)),rep('S2',length(S2_networks)))
 grp <- find.clusters(x, max.n.clust=2, n.pca=10, n.clust=2)
 table(groups_ABM,grp$grp)
 dapc.ABM <- dapc(x, grp$grp, scale=T, center=T, n.pca=10, n.da=2)
+round(dapc.ABM$var.contr,4)
 scatter(dapc.ABM)
 # Try to predict where the data is clustered
 features_empirical <- sapply(s_empirical, calculateFeatures)
 colnames(features_empirical) <- c('S1_E','S2_E')
 pred <- predict.dapc(dapc.ABM, t(features_empirical[network_features_to_include,]), scale=T, center=T)
+pred$assign
 assignplot(dapc.ABM, new.pred = pred)
 
 
