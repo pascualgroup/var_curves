@@ -24,8 +24,8 @@ cd '/home/pilosofs/Shazia'
 # 96%
 Rscript accumulation_curves_midway.R BC 0.95 For_Shai_1099_isolate_42399_DBLa_types_at_96%_seq_ID.csv
 # 90%
-Rscript accumulation_curves_midway.R BC 0.95 For_Shai_1099_isolates_31840_types_at_90%_seq_ID
+Rscript accumulation_curves_midway.R BC 0.95 For_Shai_1099_isolates_31840_types_at_90%_seq_ID.csv
 # 80%
-Rscript accumulation_curves_midway.R BC 0.95 For_Shai_1099_isolates_11546_types_at_80%_seq_ID
+Rscript accumulation_curves_midway.R BC 0.95 For_Shai_1099_isolates_11546_types_at_80%_seq_ID.csv
 # 70%
-Rscript accumulation_curves_midway.R BC 0.95 For_Shai_1099_isolates_764_types_at_70%_seq_ID
+Rscript accumulation_curves_midway.R BC 0.95 For_Shai_1099_isolates_764_types_at_70%_seq_ID.csv
