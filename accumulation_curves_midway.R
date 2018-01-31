@@ -130,7 +130,7 @@ makeCurve <- function(dat, threshold=0.95, subsample_vars){
   totalVars <- 0
   threshold <- ceiling(threshold*length(V))
   while(totalVars<threshold){ # Loop until number of vars reaches the threshold
-    print(paste('Bite: ',bites,' | total vars: ',totalVars,' | ',round(totalVars/length(V)*100,2),'% of vars sampled',sep=''))
+    print(paste('[',Sys.time(),'] ','Bite: ',bites,' | total vars: ',totalVars,' | ',round(totalVars/length(V)*100,2),'% of vars sampled',sep=''))
     bites <- bites+1
     sampledRepertoire <- sample(R, 1) # Sample a repertoire
     sampledVars <- names(which(dat[,sampledRepertoire]==1)) # What are the var genes of this rpertoire?
@@ -145,18 +145,17 @@ makeCurve <- function(dat, threshold=0.95, subsample_vars){
         sampledVars <- sample(sampledVars, vars2Subsample, F) 
       }
     }
-    # If not subsampling, or in other words, if we look at isolates with MOI>1,
-    # then make sure that the sample we take is not from an isolate with MOI=1.
-    # This is to ensure that the upper boundary is for MOI>1.
-    if (!subsample_vars){
-      if (length(sampledVars)>60){
-        next # If the sample was taken from an individual with MOI=1 then discard the sample.
-      }
-    }
-    # Limit to groups of Ups
-    # if (Ups_subset!='ABC'){
-    #   sampledVars <- sampledVars[which(sampledVars%in%subset(dataUps, Ups==Ups_subset)$Type)]
+    
+    # # If not subsampling, or in other words, if we look at isolates with MOI>1,
+    # # then make sure that the sample we take is not from an isolate with MOI=1.
+    # # This is to ensure that the upper boundary is for MOI>1.
+    # max_repertoire_length <- max(repertoireLengthDistribution) # The maximum length of a repertorie chagnes if we only sample BC or A (it is shorter then).
+    # if (!subsample_vars){
+    #   if (length(sampledVars)<=max_repertoire_length){
+    #     next # If the sample was taken from an individual with MOI=1 then discard the sample.
+    #   }
     # }
+
     
     numberNewVars <- sum(!sampledVars%in%cumulativeSampledVars) # How many of the sampled vars were not seen before?
     cumulativeNumberSampledVars <- c(cumulativeNumberSampledVars,numberNewVars+totalVars) # Add this number to the vector
