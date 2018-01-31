@@ -145,7 +145,9 @@ makeCurve <- function(dat, threshold=0.95, subsample_vars){
         sampledVars <- sample(sampledVars, vars2Subsample, F) 
       }
     }
-    # If not subsampling, or in other words, if we look at isolates with MOI>1, then make sure that the sample we take is not from an isolate with MOI=1
+    # If not subsampling, or in other words, if we look at isolates with MOI>1,
+    # then make sure that the sample we take is not from an isolate with MOI=1.
+    # This is to ensure that the upper boundary is for MOI>1.
     if (!subsample_vars){
       if (length(sampledVars)>60){
         next # If the sample was taken from an individual with MOI=1 then discard the sample.
