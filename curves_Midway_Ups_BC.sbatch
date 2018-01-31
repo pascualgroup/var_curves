@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=shzBC
-#SBATCH --time=00:20:00
+#SBATCH --time=03:00:00
 #SBATCH --output=slurm_output/shzBC_%A_%a.out
 #SBATCH --error=slurm_output/shzBC_%A_%a.err
-#SBATCH --array=1-50
+#SBATCH --array=1-100
 #SBATCH --tasks=1
 #SBATCH --cpus-per-task=1 
 #SBATCH --mem-per-cpu=3000
