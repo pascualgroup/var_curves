@@ -134,13 +134,21 @@ makeCurve <- function(dat, threshold=0.95, subsample_vars){
     bites <- bites+1
     sampledRepertoire <- sample(R, 1) # Sample a repertoire
     sampledVars <- names(which(dat[,sampledRepertoire]==1)) # What are the var genes of this rpertoire?
-    # If the sampled repertoire has a length>60 then subsample it to produce a repertoire
-    # cat('# vars: ');cat(length(sampledVars));cat(' | ')
+    
+    # When sub-sampling vars, then if the sampled repertoire has a length>60
+    # then subsample it to produce a repertoire of length 60 or less. This immitates the case of
+    # MOI=1
     if (subsample_vars){
       if (length(sampledVars)>60){
         # cat('subsampling... | ')
         vars2Subsample <- as.numeric(sample(names(repertoireLengthDistribution),1,prob=repertoireLengthDistribution)) # Determine the number of vars to subsample based on the length distribution of MOI=1
         sampledVars <- sample(sampledVars, vars2Subsample, F) 
+      }
+    }
+    # If not subsampling, or in other words, if we look at isolates with MOI>1, then make sure that the sample we take is not from an isolate with MOI=1
+    if (!subsample_vars){
+      if (length(sampledVars)>60){
+        next # If the sample was taken from an individual with MOI=1 then discard the sample.
       }
     }
     # Limit to groups of Ups
