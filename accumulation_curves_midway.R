@@ -90,7 +90,7 @@ data <- data[,-c(1,2)]
 data <- data.matrix(data)
 rownames(data) <- DBLa$DBLa_type
 
-# The distribution of repertoire lengthis based on MOI=1 and is per ups A/BC group
+# The distribution of repertoire length is based on MOI=1 and is per ups A/BC group
 if (ups_arg!='ABC'){
   print(ups_arg)
   dataMOI1 <- subsetDataMOI(data, 1)
@@ -157,6 +157,7 @@ tmp <- makeCurve(data, threshold_arg, subsample_vars=T)
 tmp$run <- run_arg
 tmp$Ups <- ups_arg
 tmp$subsample <- T
+tmp$resolution <- resolution
 write.table(tmp, paste('../Results/curveData_',ups_arg,'_',threshold_arg,'_subsampleT_',resolution,'_run_',run_arg,'.csv',sep=''),row.names = F, sep=',')
 
 print('Making curves without subsample...')
@@ -164,5 +165,6 @@ tmp <- makeCurve(data, threshold_arg, subsample_vars=F)
 tmp$run <- run_arg
 tmp$Ups <- ups_arg
 tmp$subsample <- F
+tmp$resolution <- resolution
 write.table(tmp, paste('../Results/curveData_',ups_arg,'_',threshold_arg,'_subsampleF_',resolution,'_run_',run_arg,'.csv',sep=''),row.names = F, sep=',')
   
