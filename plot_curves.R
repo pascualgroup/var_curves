@@ -1,19 +1,20 @@
 library(ggplot2)
-getRuns <- function(Ups){
+setwd('/home/shai/Documents/Shazia/Results')
+getRuns <- function(Ups, resolution){
   lower_curve <- upper_curve <- c()
-  for (i in 1:250){
+  for (i in 1:50){
     print(i)
-    lower_curve <- rbind(lower_curve, read.csv(paste('curveData_',Ups,'_0.95_subsampleT_',i,'.csv',sep=''), he=T))
-    upper_curve <- rbind(upper_curve, read.csv(paste('curveData_',Ups,'_0.95_subsampleF_',i,'.csv',sep=''), he=T))
+    lower_curve <- rbind(lower_curve, fread(paste('curveData_',Ups,'_0.95_subsampleT_',resolution,'_run_',i,'.csv',sep=''), he=T))
+    upper_curve <- rbind(upper_curve, fread(paste('curveData_',Ups,'_0.95_subsampleF_',resolution,'_run_',i,'.csv',sep=''), he=T))
   }
   lower_curve$bound <- 'L'
   upper_curve$bound <- 'U'
   curveData <- rbind(lower_curve,upper_curve)
   return(curveData)
 }
-curveData_A <- getRuns('A')
-curveData_BC <- getRuns('BC')
-curveData_ABC <- getRuns('ABC')
+curveData_A <- getRuns('A',96)
+curveData_BC <- getRuns('BC',96)
+curveData_ABC <- getRuns('ABC',96)
 
 curveData_A$Ups <- 'A'
 curveData_BC$Ups <- 'BC'
@@ -24,14 +25,15 @@ write.csv(d,'curve_data_paper.csv')
 
 # d <- read.csv('curve_data_paper.csv')
 pdf('curves_paper.pdf', width = 14, height = 8)
-ggplot(d, aes(bites/25,propVars,group=bound,color=bound))+
+ggplot(d, aes(bites/25,propVars,group=bound,color=subsample))+
   # geom_point(data=subset(d, run>=1 & run<5),alpha=0.05)+
   geom_smooth(se = T, method = "gam", formula = y ~ s(log(x+1)))+
   theme_bw()+
+  scale_color_manual(values=c('springgreen4','brown'))+
   labs(x='Years', y='Proportion of vars accumulated')+
   facet_wrap(~Ups,scales='free')
 dev.off()
-# 
+ 
 # resultsMOI200BC$bound='U'
 # resultsMOI200BC_subsample$bound='L'
 # d <- rbind(resultsMOI200BC,resultsMOI200BC_subsample)
