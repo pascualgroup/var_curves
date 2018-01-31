@@ -28,13 +28,13 @@ for (r in c(70,80,90,96)){
 
 
 # PLot --------------------------------------------------------------------
-d$Ups <- factor(d$ups, levels = c('ABC','BC','A'))
+d$Ups <- factor(d$Ups, levels = c('ABC','BC','A'))
 EIR=100
 ggplot(d, aes(bites/EIR, propVars, color=subsample))+
   geom_smooth(se = T, method = "gam", formula = y ~ s(log(x+1)))+
   theme_bw()+
   scale_color_manual(values=c('springgreen4','brown'))+
-  labs(x=paste('Years (assuming EIR of ',EIR,')',sep=''), y='Proportion of DBLa types accumulated')+
+  labs(x=paste('Years since birth (assuming EIR of ',EIR,')',sep=''), y='Proportion of DBLa types accumulated')+
   # facet_wrap(~Ups,scales='free')
   facet_grid(Ups~resolution, scales='free')
 
