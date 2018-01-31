@@ -82,7 +82,7 @@ library(stringr)
 data <- fread(paste('Data/',data_file,sep=''))
 # Get A/BC groups
 dataUps <- data[,1:2]
-table(dataUps$Ups)
+print(table(dataUps$Ups))
 # Get DBLa types
 DBLa <- data[,1]
 # Make a matrix
@@ -90,25 +90,34 @@ data <- data[,-c(1,2)]
 data <- data.matrix(data)
 rownames(data) <- DBLa$DBLa_type
 
+
 # The distribution of repertoire length is based on MOI=1 and is per ups A/BC group
 if (ups_arg!='ABC'){
   print(ups_arg)
+  # Get the distribution of repertoire lengths
   dataMOI1 <- subsetDataMOI(data, 1)
   dataMOI1 <- dataMOI1[rownames(dataMOI1)%in%subset(dataUps, Ups==ups_arg)$DBLa_type,]
   dataMOI1 <- empty(dataMOI1)
   repertoireLengthDistribution <- table(colSums(dataMOI1))
+  # Subset the data to the desired MOI
+  data <- subsetDataMOI(data, MOI)
   # Now subsample the data to obtain only the desired ups group (A or BC)
   data <- data[rownames(data)%in%subset(dataUps, Ups==ups_arg)$DBLa_type,]
   data <- empty(data)
 } else {
   print('ABC')
+  # Get the distribution of repertoire lengths
   dataMOI1 <- subsetDataMOI(data, 1)
   repertoireLengthDistribution <- table(colSums(dataMOI1))
+  # Subset the data to the desired MOI
+  data <- subsetDataMOI(data, MOI)
 }
+print('------------------------------------------------------------')
+print(paste('Ups:',ups_arg,'| MOI =',MOI,'| ',ncol(data),'repertoires |',nrow(data),'types.'))
+print('------------------------------------------------------------')
+
 
 vars <- rownames(data)
-
-
 
 # Run curves --------------------------------------------------------------
 # Subsampling vars is to create a lower boundry to the curve
@@ -158,7 +167,7 @@ tmp$run <- run_arg
 tmp$Ups <- ups_arg
 tmp$subsample <- T
 tmp$resolution <- resolution
-write.table(tmp, paste('../Results/curveData_',ups_arg,'_',threshold_arg,'_subsampleT_',resolution,'_run_',run_arg,'.csv',sep=''),row.names = F, sep=',')
+write.table(tmp, paste('Results/curveData_',ups_arg,'_',threshold_arg,'_subsampleT_',resolution,'_run_',run_arg,'.csv',sep=''),row.names = F, sep=',')
 
 print('Making curves without subsample...')
 tmp <- makeCurve(data, threshold_arg, subsample_vars=F)
@@ -166,5 +175,5 @@ tmp$run <- run_arg
 tmp$Ups <- ups_arg
 tmp$subsample <- F
 tmp$resolution <- resolution
-write.table(tmp, paste('../Results/curveData_',ups_arg,'_',threshold_arg,'_subsampleF_',resolution,'_run_',run_arg,'.csv',sep=''),row.names = F, sep=',')
+write.table(tmp, paste('Results/curveData_',ups_arg,'_',threshold_arg,'_subsampleF_',resolution,'_run_',run_arg,'.csv',sep=''),row.names = F, sep=',')
   
