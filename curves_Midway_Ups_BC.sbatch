@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=shzABC
+#SBATCH --job-name=shzBC
 #SBATCH --time=00:10:00
 #SBATCH --output=slurm_output/shzABC_%A_%a.out
 #SBATCH --error=slurm_output/shzABC_%A_%a.err
@@ -21,4 +21,4 @@ module load gcc/4.9
 # general parameters
 cd '/home/pilosofs/Shazia'
 
-Rscript accumulation_curves_midway.R ABC 0.95 For_Shai_1099_isolate_42399_DBLa_types_at_96%_seq_ID.csv
+Rscript accumulation_curves_midway.R BC 0.95 For_Shai_1099_isolate_42399_DBLa_types_at_96%_seq_ID.csv
