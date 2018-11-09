@@ -53,6 +53,9 @@ for (l in 1:nrow(comparison_list)){
   comparison_results <- rbind(comparison_results, do_bootstrap)
 }
 
+
+
+
 comparison_results %>% 
   mutate(comparison=factor(comparison,levels=c('Chi_Chi','Ado_Ado','Adu_Adu','Ado_Chi','Adu_Chi','Adu_Ado'))) %>% 
   ggplot(aes(x=comparison,y=PTS))+
