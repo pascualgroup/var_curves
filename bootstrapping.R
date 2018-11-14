@@ -37,27 +37,44 @@ bootstraped_PTS <- function(season, ages, nsim=1000){
 }
  
 
+bootstraped_PTS_all_ages <- function(season, nsim=1000){
+  # season=1;ages=c('Chi','Adu')
+  bs_PTS <- c()
+  for (n in 1:nsim){
+    # print(n)
+    x <- sample(subset(bs_data, Season==season)$SampleID,size = 2, replace = F)
+    PTStable <- data.matrix(varmat[,x])
+    bs_PTS <- c(bs_PTS, pairwiseType(PTStable)[2,1])
+  }
+  bs_PTS <- as.tibble(bs_PTS)
+  bs_PTS$comparison <- 'All'
+  bs_PTS$Season <- season
+  names(bs_PTS)[1] <- 'PTS'
+  return(bs_PTS)
+}
+
 # comparison_list <- expand.grid(age1=c('Ado','Chi'),age2=c('Adu','Chi'),season=1:2, stringsAsFactors = F)
 comparison_list <- expand.grid(age1=unique(bs_data$age_simple_2),age2=unique(bs_data$age_simple_2),season=1:2, stringsAsFactors = F)
 comparison_list <- comparison_list[-c(4,7,8,13,16,17),]
 # comparison_list <- comparison_list[!duplicated(comparison_list),]
 # comparison_list <- subset(comparison_list, age1 != age2)
-
+num_of_simulations <- 5000
 comparison_results <- NULL
 for (l in 1:nrow(comparison_list)){
   age1 <- comparison_list[l,'age1']
   age2 <- comparison_list[l,'age2']
   season <- comparison_list[l,'season']
   print(paste(season,age1,age2,sep=' | '))
-  do_bootstrap <- bootstraped_PTS(season = season, ages=c(age1,age2), 5000)
+  do_bootstrap <- bootstraped_PTS(season = season, ages=c(age1,age2), num_of_simulations)
   comparison_results <- rbind(comparison_results, do_bootstrap)
 }
 
-
+comparison_results <- rbind(comparison_results, bootstraped_PTS_all_ages(season = 1, num_of_simulations))
+comparison_results <- rbind(comparison_results, bootstraped_PTS_all_ages(season = 2, num_of_simulations))
 
 
 comparison_results %>% 
-  mutate(comparison=factor(comparison,levels=c('Chi_Chi','Ado_Ado','Adu_Adu','Ado_Chi','Adu_Chi','Adu_Ado'))) %>% 
+  mutate(comparison=factor(comparison,levels=c('Chi_Chi','Ado_Ado','Adu_Adu','Ado_Chi','Adu_Chi','Adu_Ado','All'))) %>% 
   ggplot(aes(x=comparison,y=PTS))+
   geom_violin()+
   geom_boxplot(width=0.3)+
